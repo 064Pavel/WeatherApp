@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+
+  nginx:
+    image: nginx:1.19
+    volumes:
+      - ./:/var/www
+      - ./nginx/conf.d/:/etc/nginx/conf.d
+    ports:
+      - "8081:80"
+    depends_on:
+      - php-upstream
+    container_name: nginx_service
+    environment:
+      PHP_MEMORY_LIMIT: 512M
+      PHP_POST_MAX_SIZE: 200M
+      PHP_UPLOAD_MAX_FILESIZE: 200M
+
+  php-upstream:
+    build:
+      context: .
+      dockerfile: api-gateway/Dockerfile
+    volumes:
+      - ./:/var/www
+    depends_on:
+      - db
+    container_name: php-upstream_service
+
+  db:
+    image: mysql
+    restart: always
+    volumes:
+      - ./tmp/db:/var/lib/mysql
+    environment:
+      MYSQL_DATABASE: weather
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+    ports:
+      - "3309:3306"
+    command: --character-set-server=utf8 --collation-server=utf8_unicode_ci
+    container_name: db_service
+
+
